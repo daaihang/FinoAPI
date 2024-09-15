@@ -14,6 +14,7 @@ class User(db.Model):
     wechat_unionid = db.Column(db.String(63), nullable=True, comment='微信UnionID')
     password = db.Column(db.String(255), nullable=True, comment='密码')
     session_key = db.Column(db.String(127), nullable=True, comment='微信登录加密密钥')
+    role = db.Column(db.String(20), nullable=False, default='guest', comment='用户角色')
 
     def __repr__(self):
         return f'<User {self.user_id}>'
@@ -25,5 +26,6 @@ class User(db.Model):
             'username': self.username,
             'phone_number': self.phone_number,
             'email': self.email,
-            'wechat_openid': self.wechat_openid
+            'wechat_openid': self.wechat_openid,
+            'role': self.role
         }

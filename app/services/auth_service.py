@@ -126,7 +126,8 @@ def generate_jwt(user):
     print(user.user_id)
     token = jwt.encode({
         'user_id': user.user_id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=JWT_EXPIRATION_DELTA)  # 2小时有效
+        'role': user.role,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=JWT_EXPIRATION_DELTA)  # 有效期限在config中设置
     }, SECRET_KEY, algorithm='HS256')
-    print(token)
+    print("Token: ", token)
     return token
