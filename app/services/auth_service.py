@@ -14,7 +14,11 @@ WECHAT_APP_ID = os.getenv('WECHAT_APP_ID')
 WECHAT_APP_SECRET = os.getenv('WECHAT_APP_SECRET')
 SECRET_KEY = os.getenv('SECRET_KEY')
 
+# JWT 过期时间
 JWT_EXPIRATION_DELTA = Config.JWT_EXPIRATION_DELTA
+
+# 定义角色级别
+ROLE_LEVEL = {role: idx for idx, role in enumerate(Config.VALID_ROLES)}
 
 
 def get_wechat_session_info(code):
@@ -132,3 +136,21 @@ def generate_jwt(user):
     }, SECRET_KEY, algorithm='HS256')
     print("Token: ", token)
     return token
+
+
+def update_user_role(caller_role: str, user_id: str, new_role: str):
+    user = User.query.get(user_id)
+    if not user:
+        raise ValueError('User not found')
+
+    if new_role not in ROLE_LEVEL:
+        raise ValueError('Invalid role')
+
+    if ROLE_LEVEL[caller_role] < ROLE_LEVEL.get(ROLE_LEVEL.get(user.role, -1), -1):
+        raise ValueError('Caller does not have permission to modify this user\'s role')
+
+    if ROLE_LEVEL[new_role] > ROLE_LEVEL[caller_role]:
+        raise ValueError('New role is higher than caller\'s role')
+
+    user.role = new_role
+    db.session.commit()

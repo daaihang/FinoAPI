@@ -27,7 +27,7 @@ def create_app():
     # 导入所有模型
     with app.app_context():
         # 导入模型模块
-        from app.models import user, events
+        from app.models import user, events, base
         # 可以在这里导入其他模型模块，有新模型需要及时在此加上
         # from app.models import other_model
 

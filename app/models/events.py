@@ -1,8 +1,9 @@
 import uuid
 from app import db
+from app.models.base import BaseModel
 
 
-class Event(db.Model):
+class Event(BaseModel):
     __tablename__ = 'events'
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), comment='活动唯一ID，UUID')
@@ -70,7 +71,7 @@ class Event(db.Model):
 
 
 # Contact会被Event引用，因此不用单独导入，会跟着Event导入
-class Contact(db.Model):
+class Contact(BaseModel):
     __tablename__ = 'contacts'
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), comment='联系人唯一ID，UUID')
