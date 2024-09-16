@@ -48,7 +48,8 @@ def save_user_info(user_info):
     if user:
         # 更新现有用户的信息
         user.wechat_unionid = user_info.get('unionid')
-        user.session_key = user_info.get('session_key')
+        user.session_key = user_info.get('session_key'),
+        user.jwt_revoked = False
     else:
         # 创建新用户
         user = User(
@@ -140,6 +141,7 @@ def generate_jwt(user):
 
 
 def update_user_role(caller_role: str, user_id: str, new_role: str):
+    # 如果调用者的角色是guest或者user，则没有调用权限，但这个由权限控制的修饰器（钩子）控制
     user = User.query.get(user_id)
     if not user:
         raise ValueError('User not found')
@@ -148,16 +150,25 @@ def update_user_role(caller_role: str, user_id: str, new_role: str):
     if new_role not in ROLE_LEVEL:
         raise ValueError('Invalid role')
 
+    caller_role_level = ROLE_LEVEL[caller_role]
+    # print("调用者角色：", caller_role_level)
+    user_role_level = ROLE_LEVEL[user.role] - 1
+    # print("用户角色：", user_role_level)
+    new_role_level = ROLE_LEVEL[new_role]
+    # print("新用户角色：", new_role_level)
+
+    # 权限数字越小，权限越大!!
+
     # 确保调用者有权限更改角色
-    # 如果调用者的角色是guest或者user，则没有调用权限，但这个由权限控制的修饰器（钩子）控制
-    if ROLE_LEVEL[caller_role] < ROLE_LEVEL.get(ROLE_LEVEL.get(user.role, -1), -1):
+    if caller_role_level > user_role_level:
         raise ValueError('Caller does not have permission to modify this user\'s role')
 
     # 确保新角色不高于调用者的角色
-    if ROLE_LEVEL[new_role] > ROLE_LEVEL[caller_role]:
+    if new_role_level < caller_role_level:
         raise ValueError('New role is higher than caller\'s role')
 
-    user.role = new_role  # 更新用户角色
-    user.jwt_revoked = True  # 标记 JWT 为无效
+    # 更新用户角色并标记 JWT 为无效
+    user.role = new_role
+    user.jwt_revoked = True
 
     db.session.commit()

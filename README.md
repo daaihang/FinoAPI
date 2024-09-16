@@ -12,7 +12,9 @@
 
 ## 启动说明
 
-在启动flask前需连接数据库，创建数据库模型。
+在启动flask前需连接数据库，创建数据模型，并提交至数据库。
+
+`.env`文件创建于与`app.py`同级的目录下：
 
 ```text
 # 开发环境，生产环境则设置为 'production'
@@ -33,3 +35,12 @@ WECHAT_APP_SECRET=********
 # 数据库连接
 SQLALCHEMY_DATABASE_URI=mysql://user:password@localhost:3306/finoapi
 ```
+
+在根目录下使用命令：
+```shell
+flask db init  # 初始化数据模型
+flask db migrate -m "commit"  # 提交数据模型
+flask db upgrade  # 应用更改至数据库
+```
+
+运行 Flask 应用即可。

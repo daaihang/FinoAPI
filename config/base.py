@@ -15,4 +15,5 @@ class Config:
     # 其他配置项
     JWT_EXPIRATION_DELTA = 48  # JWT 超时时长，单位为小时
     PAGE_SIZES = [10, 20, 50, 100]  # 允许的每页/每次查询数，避免单次查询过多活动，避免脱裤
-    VALID_ROLES = ['root', 'admin', 'user', 'guest']  # 角色列表
+    VALID_ROLES = ['root', 'admin', 'user', 'guest']  # 角色列表，需要权限从大到小排
+    # VALID_ROLES = ['guest', 'user', 'admin', 'root']  # 角色列表，需要权限从小到大排
