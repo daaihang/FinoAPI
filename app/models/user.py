@@ -1,6 +1,8 @@
 # app/models/user.py
 from app import db
+
 import uuid
+import datetime
 
 
 class User(db.Model):
