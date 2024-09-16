@@ -17,5 +17,6 @@
 # 忽略 Web 服务器生成的文件夹
 __pycache__/
 
+# 忽略虚拟环境和数据库模型生成的文件
 venv/
 migrations/
