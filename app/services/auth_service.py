@@ -16,6 +16,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 JWT_EXPIRATION_DELTA = Config.JWT_EXPIRATION_DELTA
 
+
 def get_wechat_session_info(code):
     """根据临时登录凭证 code 调用微信接口获取用户信息"""
     url = 'https://api.weixin.qq.com/sns/jscode2session'

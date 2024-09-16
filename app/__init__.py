@@ -6,6 +6,7 @@ from flask_migrate import Migrate  # 数据库迁移工具
 
 from app.api import register_routes
 
+
 db = SQLAlchemy()
 migrate = Migrate()
 
@@ -26,7 +27,7 @@ def create_app():
     # 导入所有模型
     with app.app_context():
         # 导入模型模块
-        from app.models import user  # 导入 user 模块以便应用模型
+        from app.models import user, events
         # 可以在这里导入其他模型模块，有新模型需要及时在此加上
         # from app.models import other_model
 

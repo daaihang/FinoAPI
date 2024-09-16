@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify
-from app.services.auth_service import wechat_login, get_all_users, get_user_info
 
+from app.services.auth_service import wechat_login, get_all_users, get_user_info
 from app.services.decorators import jwt_required  # 导入装饰器
+
+from config.base import Config
 
 bp = Blueprint('auth', __name__)
 

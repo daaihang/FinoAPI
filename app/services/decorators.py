@@ -8,7 +8,7 @@ from app.models import User  # 假设您有一个用户模型
 
 
 def jwt_required(*required_roles):
-    """装饰器用于验证 JWT 并检查用户角色
+    """装饰器用于验证 JWT 并检查用户角色。更改用户角色后需要重新获取新的JWT避免验证失败。
 
     :param required_roles: 需要的角色列表，如果不传则默认接受所有角色
     """
