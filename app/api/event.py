@@ -8,7 +8,7 @@ bp = Blueprint('event', __name__)
 
 
 @bp.route('/new', methods=['POST'])
-@jwt_required("admin")
+@jwt_required("root", "admin")
 def create_event_route():
     """创建新活动"""
     event_data = request.json
@@ -17,7 +17,7 @@ def create_event_route():
 
 
 @bp.route('/<event_id>', methods=['GET'])
-@jwt_required("admin")
+@jwt_required("root", "admin")
 def get_event_route(event_id):
     """获取单个活动"""
     event = get_event(event_id)
@@ -27,7 +27,7 @@ def get_event_route(event_id):
 
 
 @bp.route('/all_events', methods=['GET'])
-@jwt_required("admin")
+@jwt_required()
 def get_all_events_route():
     """获取所有活动，支持分页"""
     page = int(request.args.get('page', 1))
@@ -42,7 +42,7 @@ def get_all_events_route():
 
 
 @bp.route('/<event_id>', methods=['PUT'])
-@jwt_required("admin")
+@jwt_required("root", "admin")
 def update_event_route(event_id):
     """更新活动信息"""
     updated_data = request.json
@@ -53,6 +53,7 @@ def update_event_route(event_id):
 
 
 @bp.route('/<event_id>', methods=['DELETE'])
+@jwt_required("root", "admin")
 def delete_event_route(event_id):
     """删除活动"""
     event = delete_event(event_id)

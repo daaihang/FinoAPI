@@ -19,14 +19,14 @@ def login():
 
 
 @bp.route('/users', methods=['GET'])
-@jwt_required("admin")
+@jwt_required("root", "admin")
 def list_users():
     """获取所有用户"""
     return get_all_users()
 
 
 @bp.route('/user/<openid>', methods=['GET'])
-@jwt_required("root")
+@jwt_required("root", "admin")
 def get_user(openid):
     """根据 OpenID 获取用户信息"""
     return get_user_info(openid)
@@ -40,6 +40,7 @@ def protected():
 
 
 @bp.route('/update_role', methods=['POST'])
+@jwt_required("root", "admin")
 def update_role():
     data = request.get_json()
     user_id = data.get('user_id')

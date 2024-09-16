@@ -70,6 +70,7 @@ def save_user_info(user_info):
 
 def wechat_login(code):
     """处理小程序登录，生成并下发 JWT"""
+    # 获取微信会话信息
     session_info = get_wechat_session_info(code)
 
     if 'errcode' in session_info:
@@ -143,14 +144,20 @@ def update_user_role(caller_role: str, user_id: str, new_role: str):
     if not user:
         raise ValueError('User not found')
 
+    # 确保新的角色有效
     if new_role not in ROLE_LEVEL:
         raise ValueError('Invalid role')
 
+    # 确保调用者有权限更改角色
+    # 如果调用者的角色是guest或者user，则没有调用权限，但这个由权限控制的修饰器（钩子）控制
     if ROLE_LEVEL[caller_role] < ROLE_LEVEL.get(ROLE_LEVEL.get(user.role, -1), -1):
         raise ValueError('Caller does not have permission to modify this user\'s role')
 
+    # 确保新角色不高于调用者的角色
     if ROLE_LEVEL[new_role] > ROLE_LEVEL[caller_role]:
         raise ValueError('New role is higher than caller\'s role')
 
-    user.role = new_role
+    user.role = new_role  # 更新用户角色
+    user.jwt_revoked = True  # 标记 JWT 为无效
+
     db.session.commit()
