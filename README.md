@@ -44,3 +44,8 @@ flask db upgrade  # 应用更改至数据库
 ```
 
 运行 Flask 应用即可。
+
+## 其他事项
+
+`gunicorn.conf.py`文件为Docker中并发设计，在Windows下因为缺少库而测试暂时搁置。
+具体[看这里](https://zhuanlan.zhihu.com/p/78432719)。

@@ -152,7 +152,7 @@ def update_user_role(caller_role: str, user_id: str, new_role: str):
 
     caller_role_level = ROLE_LEVEL[caller_role]
     # print("调用者角色：", caller_role_level)
-    user_role_level = ROLE_LEVEL[user.role] - 1
+    user_role_level = ROLE_LEVEL[user.role]
     # print("用户角色：", user_role_level)
     new_role_level = ROLE_LEVEL[new_role]
     # print("新用户角色：", new_role_level)
@@ -166,6 +166,10 @@ def update_user_role(caller_role: str, user_id: str, new_role: str):
     # 确保新角色不高于调用者的角色
     if new_role_level < caller_role_level:
         raise ValueError('New role is higher than caller\'s role')
+
+    # 新角色不与原角色相同
+    if new_role_level == user_role_level:
+        raise ValueError('New role is the same as user\'s old role')
 
     # 更新用户角色并标记 JWT 为无效
     user.role = new_role

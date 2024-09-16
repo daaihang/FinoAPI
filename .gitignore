@@ -20,3 +20,6 @@ __pycache__/
 # 忽略虚拟环境和数据库模型生成的文件
 venv/
 migrations/
+
+# Flask 应用生成的部署文件
+build/
