@@ -8,8 +8,9 @@ WORKDIR /
 # 复制项目文件到容器中
 COPY . .
 
-# 安装依赖
-RUN pip install -r requirements.txt
+# 安装依赖(输出日志)
+RUN pip install --upgrade pip &&  \
+    pip install -r requirements.txt --no-cache-dir --verbose
 
 # 暴露端口 8156
 EXPOSE 8156
