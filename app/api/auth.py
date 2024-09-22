@@ -1,7 +1,7 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 import jwt
 
-from app.services.auth_service import wechat_login, get_all_users, get_user_info, update_user_role
+from app.services.auth_service import wechat_login, get_all_users, get_user_info, update_user_role, get_user_self_info
 from app.services.decorators import jwt_required  # 导入装饰器
 
 from config.base import Config
@@ -29,7 +29,16 @@ def list_users():
 @jwt_required("root", "admin")
 def get_user(openid):
     """根据 OpenID 获取用户信息"""
+    # print(g.current_user)
     return get_user_info(openid)
+
+
+@bp.route('/myinfo', methods=['GET'])
+@jwt_required()
+def get_self_user():
+    """根据用户登录令牌 JWT 获取用户自身的信息"""
+    # print(g.current_user)
+    return get_user_self_info(g.current_user)
 
 
 @bp.route('/protected', methods=['GET'])

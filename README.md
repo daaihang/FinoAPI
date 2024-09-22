@@ -49,3 +49,22 @@ flask db upgrade  # 应用更改至数据库
 
 `gunicorn.conf.py`文件为Docker中并发设计，在Windows下因为缺少库而测试暂时搁置。
 具体[看这里](https://zhuanlan.zhihu.com/p/78432719)。
+
+
+
+现在还在开发阶段，在Docker中暂时使用python app.py启动程序。具体Docker包位于[daaihang/finoapi](https://hub.docker.com/repository/docker/daaihang/finoapi/general)。根据未来规划，可能改变image的公开策略。
+
+
+
+### 如何启动FinoAPI Docker Image
+
+通过docker run命令：
+
+```
+docker run -d -p 8156:8156 \
+  -e FLASK_ENV=production \
+  -e SECRET_KEY=mysecretkey \
+  -e DATABASE_URL=mysql://user:password@db:3306/mydb \
+  your_docker_image
+```
+

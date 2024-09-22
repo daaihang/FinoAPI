@@ -31,4 +31,5 @@ from app import create_app
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+    # 在PyCharm中需要修改运行配置（Host 和 Port），在此修改无效
+    app.run(host='0.0.0.0', port=8156)

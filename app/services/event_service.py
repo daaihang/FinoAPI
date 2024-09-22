@@ -19,7 +19,8 @@ def create_event(event_data):
         images=event_data['images'],
         registration_review_required=event_data['registration_review_required'],
         registration_required=event_data['registration_required'],
-        is_public=event_data['is_public']
+        is_public=event_data['is_public'],
+        is_delete=event_data['is_delete']
     )
     db.session.add(event)
     db.session.commit()

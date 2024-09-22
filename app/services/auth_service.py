@@ -4,7 +4,7 @@ import os
 import jwt
 import requests
 import json
-from flask import jsonify
+from flask import jsonify, g
 from app.models import User
 from app import db
 from config.base import Config  # 导入配置类
@@ -119,6 +119,19 @@ def get_user_info(openid):
     """根据 OpenID 获取用户信息"""
     try:
         user = User.query.filter_by(wechat_openid=openid).first()  # 根据 OpenID 查询用户
+        if user:
+            return jsonify(user.to_dict()), 200
+        else:
+            return jsonify({'error': 'User not found'}), 404
+    except Exception as e:
+        # 返回500错误和错误信息
+        return jsonify({'error': str(e)}), 500
+
+
+def get_user_self_info(current_user):
+    """根据用户登录令牌 JWT 获取用户自身的信息"""
+    try:
+        user = User.query.filter_by(user_id=current_user.user_id).first()  # 根据 OpenID 查询用户
         if user:
             return jsonify(user.to_dict()), 200
         else:
