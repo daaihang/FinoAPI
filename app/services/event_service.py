@@ -1,5 +1,9 @@
+from datetime import datetime
+
 from app.models import Event, Contact
 from app import db
+
+from sqlalchemy import and_
 
 from config.base import Config  # 导入配置类
 
@@ -32,16 +36,43 @@ def get_event(event_id):
     return Event.query.get(event_id)
 
 
-def get_all_events(page, per_page):
-    """获取所有活动，支持分页"""
-    per_page = int(per_page)  # 确保 per_page 是整数
-    page = int(page)  # 确保 page 是整数
+def get_all_events(page, per_page, event_type, sort_by, sort_order, filter_status):
+    """获取所有活动或某类型活动，支持分页、排序、过滤"""
+    query = Event.query
 
-    # 检查 per_page 是否在允许的分页大小列表中
-    if per_page not in Config.PAGE_SIZES:
-        per_page = Config.PAGE_SIZES[0]  # 如果不在允许的列表中，使用默认的分页大小
+    # 按类型过滤
+    if event_type != 'all':
+        query = query.filter_by(type=event_type)
 
-    pagination = Event.query.paginate(page=page, per_page=per_page, error_out=True)
+    # 筛选状态
+    current_time = datetime.now()
+    if filter_status == 'not_started_registration':
+        query = query.filter(Event.registration_start_time > current_time)
+    elif filter_status == 'ongoing_registration':
+        query = query.filter(and_(Event.registration_start_time <= current_time, Event.registration_end_time > current_time))
+    elif filter_status == 'ended_registration':
+        query = query.filter(Event.registration_end_time < current_time)
+    elif filter_status == 'not_started':
+        query = query.filter(Event.start_time > current_time)
+    elif filter_status == 'ongoing':
+        query = query.filter(and_(Event.start_time <= current_time, Event.end_time > current_time))
+    elif filter_status == 'ended':
+        query = query.filter(Event.end_time < current_time)
+
+    # 排序
+    if sort_by == 'start_time':
+        if sort_order == 'asc':
+            query = query.order_by(Event.start_time.asc())
+        else:
+            query = query.order_by(Event.start_time.desc())
+    elif sort_by == 'registration_end_time':
+        if sort_order == 'asc':
+            query = query.order_by(Event.registration_end_time.asc())
+        else:
+            query = query.order_by(Event.registration_end_time.desc())
+
+    # 分页
+    pagination = query.paginate(page=page, per_page=per_page, error_out=True)
     return pagination.items, pagination.total
 
 

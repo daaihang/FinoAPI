@@ -17,18 +17,20 @@ class Event(BaseModel):
     co_organizers = db.Column(db.Text, nullable=True, comment='活动承办单位')
     location = db.Column(db.String(255), nullable=True, comment='活动地点')
     details = db.Column(db.Text, nullable=True, comment='活动详情（Markdown 格式）')
-    images = db.Column(db.Text, nullable=True, comment='活动图片海报（URL 列表）')
+    image = db.Column(db.Text, nullable=True, comment='活动图片海报（URL）')
     registration_review_required = db.Column(db.Boolean, nullable=False, default=False, comment='报名是否需要审核')
     registration_required = db.Column(db.Boolean, nullable=False, default=True, comment='活动是否需要报名')
     is_public = db.Column(db.Boolean, nullable=False, default=False, comment='活动是否发布、公开')
     is_delete = db.Column(db.Boolean, nullable=False, default=False, comment='活动是否归档、删除')
+    tags = db.Column(db.Text, nullable=True, comment='活动标签，英文逗号分隔的无空格字符串')
+    type = db.Column(db.String(32), nullable=False, default='activity', comment='活动类型(exhibition展览/activity活动)')
 
     # Relationships
     contacts = db.relationship('Contact', backref='event', cascade='all, delete-orphan')
 
     def __init__(self, name, start_time, end_time, registration_start_time, registration_end_time, max_participants,
-                 organizers, co_organizers, location, details, images, registration_review_required,
-                 registration_required, is_public, is_delete):
+                 organizers, co_organizers, location, details, image, registration_review_required,
+                 registration_required, is_public, is_delete, tags, type):
         self.name = name
         self.start_time = start_time
         self.end_time = end_time
@@ -39,11 +41,13 @@ class Event(BaseModel):
         self.co_organizers = co_organizers
         self.location = location
         self.details = details
-        self.images = images
+        self.image = image
         self.registration_review_required = registration_review_required
         self.registration_required = registration_required
         self.is_public = is_public
         self.is_delete = is_delete
+        self.tags = tags
+        self.type = type
 
     def __repr__(self):
         return f'<Event {self.name} (ID: {self.id})>'
@@ -62,11 +66,13 @@ class Event(BaseModel):
             'co_organizers': self.co_organizers,
             'location': self.location,
             'details': self.details,
-            'images': self.images,
+            'image': self.image,
             'registration_review_required': self.registration_review_required,
             'registration_required': self.registration_required,
             'is_public': self.is_public,
-            'is_delete': self.is_delete
+            'is_delete': self.is_delete,
+            'tags': self.tags,
+            'type': self.type
         }
 
 
