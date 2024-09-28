@@ -34,7 +34,7 @@ jobs:
       run: |
         docker build -t ${{ secrets.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/finolab:latest .
 
-    # 推送 Docker 镜像到阿里云 Docker Registry
+    # 推送 Docker 镜像到腾讯云 Docker Registry
     - name: Push Docker image
       run: |
         docker push ${{ secrets.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/finolab:latest
