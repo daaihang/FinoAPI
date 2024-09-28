@@ -24,7 +24,7 @@ jobs:
     - name: Log in to Tencent Cloud Docker Registry
       uses: docker/login-action@v3
       with:
-#        registry: ccr.ccs.tencentyun.com
+        # registry: ccr.ccs.tencentyun.com
         registry: ${{ secrets.TCR_REGISTRY }}
         username: ${{ secrets.TCR_USERNAME }}
         password: ${{ secrets.TCR_PASSWORD }}
