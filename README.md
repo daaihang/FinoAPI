@@ -60,7 +60,7 @@ flask db upgrade  # 应用更改至数据库
 
 通过docker run命令：
 
-```
+```shell
 docker run -d -p 8156:8156 \
   -e FLASK_ENV=production \
   -e SECRET_KEY=mysecretkey \
@@ -68,3 +68,6 @@ docker run -d -p 8156:8156 \
   your_docker_image
 ```
 
+```shell
+docker-compose --env-file .env up --build
+```

@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  app:
+    image: "daaihang/finolab:latest"
+    container_name: finolab_app
+    ports:
+      - "8156:8156"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - db
+    networks:
+      - finolab-network
+    command: >
+      bash -c "flask db upgrade && flask run --host=0.0.0.0"
+
+  db:
+    image: mysql:8.0
+    container_name: finolab_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - finolab-network
+
+networks:
+  finolab-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

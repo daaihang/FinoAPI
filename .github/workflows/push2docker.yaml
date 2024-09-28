@@ -30,9 +30,9 @@ jobs:
     # 构建 Docker 镜像
     - name: Build Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/finoapi:latest .
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/finolab:latest .
 
     # 推送 Docker 镜像到 Docker Hub
     - name: Push Docker image
       run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/finoapi:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/finolab:latest

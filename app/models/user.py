@@ -19,6 +19,7 @@ class User(BaseModel):
     session_key = db.Column(db.String(127), nullable=True, comment='微信登录加密密钥')
     role = db.Column(db.String(20), nullable=False, default='guest', comment='用户角色')
     jwt_revoked = db.Column(db.Boolean, default=False, comment='JWT是否已注销')
+    avatar = db.Column(db.String(512), nullable=True, comment='用户头像')
 
     # 关联积分系统和钱包系统
     points = db.relationship('Points', uselist=False, backref='user', cascade='all, delete-orphan')
@@ -36,7 +37,8 @@ class User(BaseModel):
             'email': self.email,
             'wechat_openid': self.wechat_openid,
             'role': self.role,
-            'jwt_revoked': self.jwt_revoked
+            'jwt_revoked': self.jwt_revoked,
+            'avatar': self.avatar,
         }
 
 

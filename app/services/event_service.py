@@ -20,11 +20,13 @@ def create_event(event_data):
         co_organizers=event_data['co_organizers'],
         location=event_data['location'],
         details=event_data['details'],
-        images=event_data['images'],
+        image=event_data['image'],
         registration_review_required=event_data['registration_review_required'],
         registration_required=event_data['registration_required'],
         is_public=event_data['is_public'],
-        is_delete=event_data['is_delete']
+        is_delete=event_data['is_delete'],
+        tags=event_data['tags'],
+        type=event_data['type']
     )
     db.session.add(event)
     db.session.commit()

@@ -3,10 +3,13 @@
 
 Todo: 未来应该加上转发所有域名的操作，将常用API单独适配即可。
 """
+import time
+
 import requests
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 
 from app.services.decorators import jwt_required  # 导入装饰器
+from app.services.external_service import handle_file_upload
 
 from config.base import Config
 
@@ -35,3 +38,17 @@ def get_random_photo():
     except requests.exceptions.RequestException as e:
         # 捕获请求错误并返回错误信息
         return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/upload/<file_type>', methods=['POST'])
+@jwt_required()
+def upload_file(file_type):
+    """上传文件到腾讯云 COS 到指定的目录"""
+    file = request.files['file']  # 获取上传的文件
+    if not file:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    user_id = g.current_user.user_id  # 从 g 对象中获取用户 ID
+    print(user_id)
+    response, status_code = handle_file_upload(file_type, file, user_id)
+    return jsonify(response), status_code
