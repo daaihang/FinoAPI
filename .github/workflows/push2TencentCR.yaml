@@ -38,4 +38,3 @@ jobs:
     - name: Push Docker image
       run: |
         docker push ${{ secrets.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/finolab:latest
-
