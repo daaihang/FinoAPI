@@ -44,7 +44,9 @@ def get_all_events(page, per_page, event_type, sort_by, sort_order, filter_statu
 
     # 按类型过滤
     if event_type != 'all':
-        query = query.filter_by(type=event_type)
+        query = query.filter_by(type=event_type, is_delete=False)
+    else:
+        query = query.filter_by(is_delete=False)
 
     # 筛选状态
     current_time = datetime.now()
