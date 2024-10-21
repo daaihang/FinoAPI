@@ -9,7 +9,7 @@ import requests
 from flask import Blueprint, request, jsonify, g
 
 from app.services.decorators import jwt_required  # 导入装饰器
-from app.services.external_service import handle_file_upload
+from app.services.external_service import handle_file_upload, send_sms
 
 from config.base import Config
 
@@ -52,3 +52,18 @@ def upload_file(file_type):
     print(user_id)
     response, status_code = handle_file_upload(file_type, file, user_id)
     return jsonify(response), status_code
+
+
+@bp.route('/send_sms', methods=['POST'])
+@jwt_required()
+def api_send_sms():
+    data = request.json
+    phone_number = data.get("phone_number")
+    template_id = data.get("template_id")
+    params = data.get("params")
+
+    if not phone_number or not template_id:
+        return jsonify({"error": "Phone number and template ID are required."}), 400
+
+    result = send_sms(phone_number, template_id, params)
+    return jsonify(result)

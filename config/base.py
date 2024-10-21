@@ -21,7 +21,8 @@ class Config:
     # 其他配置项
     JWT_EXPIRATION_DELTA = 48  # JWT 超时时长，单位为小时
     PAGE_SIZES = [10, 20, 50, 100]  # 允许的每页/每次查询数，避免单次查询过多活动，避免脱裤
-    VALID_ROLES = ['root', 'admin', 'user', 'guest']  # 角色列表，需要权限从大到小排
+    VALID_ROLES = ['root', 'admin', 'monitor', 'user', 'guest']  # 角色列表，需要权限从大到小排
+    SMS_VALIDITY_MINUTES = 5  # 短信验证码的有效时间
 
     UNSPLASH_SECRET_KEY = os.getenv('UNSPLASH_SECRET_KEY')
 
@@ -31,3 +32,9 @@ class Config:
     POSTER_FOLDER = "uploads/posters"
     ANNOUNCEMENT_FOLDER = "uploads/announcements"
     ATTACHMENT_FOLDER = "uploads/attachments"
+
+    # 腾讯云 SMS 短信配置
+    SMS_SECRET_ID = os.environ.get('SMS_SECRET_ID')
+    SMS_SECRET_KEY = os.environ.get('SMS_SECRET_KEY')
+    SMS_SDK_APP_ID = os.environ.get('SMS_SDK_APP_ID')
+    SMS_SMS_SIGN = os.environ.get('SMS_SMS_SIGN')

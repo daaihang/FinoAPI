@@ -40,6 +40,7 @@ def get_event(event_id):
 
 def get_all_events(page, per_page, event_type, sort_by, sort_order, filter_status):
     """获取所有活动或某类型活动，支持分页、排序、过滤"""
+    # todo： 非公开的活动需要根据权限过滤。管理员可以查看草稿。
     query = Event.query
 
     # 按类型过滤

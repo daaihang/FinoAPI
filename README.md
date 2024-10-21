@@ -72,3 +72,25 @@ docker run -d -p 8156:8156 \
 ```shell
 docker-compose --env-file .env up --build
 ```
+
+### 获取当前操作的用户
+
+可以通过修饰器`@jwt_required()`，在路由函数内直接获取当前用户的`user_id`。例如：
+
+```python
+from flask import Blueprint, g
+from app.services.decorators import jwt_required
+bp = Blueprint('auth', __name__)
+
+@bp.route('/myinfo', methods=['GET'])
+@jwt_required()
+def get_self_user():
+    """根据用户登录令牌 JWT 获取用户自身的信息"""
+    print(g.current_user)
+    return get_user_self_info(g.current_user)
+
+def get_user_self_info():
+    pass
+```
+
+`g.current_user`可以在路由函数获取`user_id`并传入逻辑函数内。

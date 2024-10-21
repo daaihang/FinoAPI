@@ -7,12 +7,13 @@ import json
 from flask import jsonify, g
 from app.models import User
 from app import db
+from app.services.sms_service import verify_sms_code
 from config.base import Config  # 导入配置类
 
 # 从环境变量获取 AppID 和 AppSecret
-WECHAT_APP_ID = os.getenv('WECHAT_APP_ID')
-WECHAT_APP_SECRET = os.getenv('WECHAT_APP_SECRET')
-SECRET_KEY = os.getenv('SECRET_KEY')
+WECHAT_APP_ID = Config.WECHAT_APP_ID
+WECHAT_APP_SECRET = Config.WECHAT_APP_SECRET
+SECRET_KEY = Config.SECRET_KEY
 
 # JWT 过期时间
 JWT_EXPIRATION_DELTA = Config.JWT_EXPIRATION_DELTA
@@ -189,3 +190,39 @@ def update_user_role(caller_role: str, user_id: str, new_role: str):
     user.jwt_revoked = True
 
     db.session.commit()
+
+
+def bind_phone(user_id, phone_number, code):
+    """
+    绑定手机号，验证通过则进行绑定或换绑操作
+    :param user_id: 用户ID
+    :param phone_number: 要绑定的手机号
+    :param code: 用户输入的验证码
+    :return: 绑定结果
+    """
+    # 先验证短信验证码
+    if not verify_sms_code(user_id, phone_number, code):
+        return jsonify({'error': 'Invalid or expired verification code'}), 400
+
+    # 查询用户是否存在
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    # 如果用户已有绑定的手机号，说明是换绑操作
+    if user.phone:
+        old_phone = user.phone
+        user.phone = phone_number  # 换绑手机号
+        action = f"Phone number changed from {old_phone} to {phone_number}"
+    else:
+        # 如果没有绑定的手机号，则是首次绑定
+        user.phone = phone_number
+        action = f"Phone number {phone_number} successfully bound"
+
+    try:
+        # 保存到数据库
+        db.session.commit()
+        return jsonify({'message': action}), 200
+    except Exception as e:
+        db.session.rollback()  # 出现异常时回滚数据库
+        return jsonify({'error': str(e)}), 500

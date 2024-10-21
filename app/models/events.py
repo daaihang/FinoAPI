@@ -2,12 +2,15 @@ import uuid
 from app import db
 from app.models.base import BaseModel
 
+import pytz
 
 class Event(BaseModel):
     __tablename__ = 'events'
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), comment='活动唯一ID，UUID')
     name = db.Column(db.String(255), nullable=False, comment='活动名称')
+    create_user = db.Column(db.String(36), db.ForeignKey('user.user_id'), nullable=True,
+                            comment='创建该活动的用户，外键')
     start_time = db.Column(db.DateTime, nullable=False, comment='活动开始时间')
     end_time = db.Column(db.DateTime, nullable=False, comment='活动结束时间')
     registration_start_time = db.Column(db.DateTime, nullable=True, comment='报名开始时间')
@@ -25,13 +28,16 @@ class Event(BaseModel):
     tags = db.Column(db.Text, nullable=True, comment='活动标签，英文逗号分隔的无空格字符串')
     type = db.Column(db.String(32), nullable=False, default='activity', comment='活动类型(exhibition展览/activity活动)')
 
+    # todo: 新增场次字段（字典），报名时有不同的场次选择。
+
     # Relationships
     contacts = db.relationship('Contact', backref='event', cascade='all, delete-orphan')
 
-    def __init__(self, name, start_time, end_time, registration_start_time, registration_end_time, max_participants,
+    def __init__(self, name, create_user, start_time, end_time, registration_start_time, registration_end_time, max_participants,
                  organizers, co_organizers, location, details, image, registration_review_required,
                  registration_required, is_public, is_delete, tags, type):
         self.name = name
+        self.create_user = create_user
         self.start_time = start_time
         self.end_time = end_time
         self.registration_start_time = registration_start_time
@@ -54,13 +60,26 @@ class Event(BaseModel):
 
     def to_dict(self):
         """将活动对象转化为字典，方便JSON序列化"""
+
+        # 定义东八区时区
+        tz = pytz.timezone('Asia/Shanghai')
+
+        def format_time(dt):
+            """辅助函数，将时间转化为东八区的 YYYY-MM-DD hh:mm:ss 格式"""
+            if dt:
+                # 将时间转为东八区并格式化
+                dt_utc = dt.astimezone(tz)
+                return dt_utc.strftime('%Y-%m-%d %H:%M:%S')
+            return None
+
         return {
             'id': self.id,
             'name': self.name,
-            'start_time': self.start_time.isoformat() if self.start_time else None,
-            'end_time': self.end_time.isoformat() if self.end_time else None,
-            'registration_start_time': self.registration_start_time.isoformat() if self.registration_start_time else None,
-            'registration_end_time': self.registration_end_time.isoformat() if self.registration_end_time else None,
+            'create_user': self.create_user,
+            'start_time': format_time(self.start_time),
+            'end_time': format_time(self.end_time),
+            'registration_start_time': format_time(self.registration_start_time),
+            'registration_end_time': format_time(self.registration_end_time),
             'max_participants': self.max_participants,
             'organizers': self.organizers,
             'co_organizers': self.co_organizers,

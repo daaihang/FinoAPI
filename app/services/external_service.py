@@ -1,6 +1,13 @@
+import json
 import os
 import time
 from qcloud_cos import CosConfig, CosS3Client
+from tencentcloud.common import credential
+from tencentcloud.common.exception import TencentCloudSDKException
+from tencentcloud.common.profile.client_profile import ClientProfile
+from tencentcloud.common.profile.http_profile import HttpProfile
+from tencentcloud.sms.v20210111 import sms_client, models
+
 from config.base import Config
 
 # 初始化腾讯云 COS 客户端
@@ -46,3 +53,47 @@ def handle_file_upload(file_type, file, user_id):
         return {"message": "File uploaded successfully", "ETag": response['ETag'], "file_path": object_key}, 200
     except Exception as e:
         return {"error": str(e)}, 500
+
+
+def send_sms(phone_number, template_id, params):
+    """
+    发送短信逻辑函数。
+
+    :param phone_number: str 接收短信的手机号
+    :param template_id: str 短信模板ID
+    :param params: list 短信模板的参数, 例如 [验证码, 过期时间]
+    :return: dict 发送结果
+    """
+    try:
+        # 实例化一个认证对象，入参需要传入腾讯云账户 SecretId 和 SecretKey
+        cred = credential.Credential(Config.SMS_SECRET_ID, Config.SMS_SECRET_KEY)
+
+        # 实例化一个http选项
+        httpProfile = HttpProfile()
+        httpProfile.endpoint = "sms.tencentcloudapi.com"
+
+        # 实例化一个client选项
+        clientProfile = ClientProfile()
+        clientProfile.httpProfile = httpProfile
+
+        # 实例化要请求产品的client对象
+        client = sms_client.SmsClient(cred, "ap-guangzhou", clientProfile)
+
+        # 实例化一个请求对象
+        req = models.SendSmsRequest()
+
+        # 填充请求参数
+        req.SmsSdkAppId = Config.SMS_SDK_APP_ID
+        req.SignName = Config.SMS_SMS_SIGN
+        req.TemplateId = template_id
+        req.PhoneNumberSet = [phone_number]  # 接收者手机号
+        req.TemplateParamSet = params  # 短信模板参数
+
+        # 发送短信
+        resp = client.SendSms(req)
+
+        # 返回的resp是一个SendSmsResponse的实例
+        return json.loads(resp.to_json_string())
+
+    except TencentCloudSDKException as err:
+        return {"error": str(err)}

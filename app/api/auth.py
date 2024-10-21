@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, g
 import jwt
 
-from app.services.auth_service import wechat_login, get_all_users, get_user_info, update_user_role, get_user_self_info
+from app.services.auth_service import (wechat_login, get_all_users, get_user_info, update_user_role,
+                                       get_user_self_info, bind_phone)
 from app.services.decorators import jwt_required  # 导入装饰器
 
 from config.base import Config
@@ -19,14 +20,14 @@ def login():
 
 
 @bp.route('/users', methods=['GET'])
-@jwt_required("root", "admin")
+@jwt_required("admin", "monitor")
 def list_users():
     """获取所有用户"""
     return get_all_users()
 
 
 @bp.route('/user/<openid>', methods=['GET'])
-@jwt_required("root", "admin")
+@jwt_required("admin", "monitor")
 def get_user(openid):
     """根据 OpenID 获取用户信息"""
     # print(g.current_user)
@@ -42,14 +43,14 @@ def get_self_user():
 
 
 @bp.route('/protected', methods=['GET'])
-@jwt_required("admin", "editor")  # 多个角色
+@jwt_required("admin", "monitor")  # 多个角色
 def protected():
     """测试用的路由，测试权限代码"""
     return jsonify({'message': 'Welcome Admin or Editor'}), 200
 
 
 @bp.route('/update_role', methods=['POST'])
-@jwt_required("root", "admin")
+@jwt_required("admin", "monitor")
 def update_role():
     data = request.get_json()
     user_id = data.get('user_id')
@@ -78,3 +79,19 @@ def update_role():
         return jsonify({'error': 'Invalid token'}), 401
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
+
+
+@bp.route('/bind_phone', methods=['POST'])
+@jwt_required("admin", "monitor")
+def bind_phone_number():
+    """
+    绑定手机号
+    :return:
+    """
+    user_id = g.current_user
+    phone_number = request.json.get('phone_number')
+    code = request.json.get('code')
+    if bind_phone(user_id, phone_number, code):
+        return jsonify({'message': 'Phone number bound successfully'})
+    else:
+        return jsonify({'error': 'Binding failed'}), 400
