@@ -1,7 +1,9 @@
 import json
 import os
 import time
-from qcloud_cos import CosConfig, CosS3Client
+from io import BytesIO
+
+from qcloud_cos import CosConfig, CosS3Client, CosServiceError
 from tencentcloud.common import credential
 from tencentcloud.common.exception import TencentCloudSDKException
 from tencentcloud.common.profile.client_profile import ClientProfile
@@ -53,6 +55,28 @@ def handle_file_upload(file_type, file, user_id):
         return {"message": "File uploaded successfully", "ETag": response['ETag'], "file_path": object_key}, 200
     except Exception as e:
         return {"error": str(e)}, 500
+
+
+def get_file_from_cos(file_key):
+    try:
+        # 从COS获取文件对象
+        response = client.get_object(
+            Bucket=Config.COS_BUCKET_NAME,
+            Key=file_key
+        )
+
+        # 获取文件内容
+        file_stream = BytesIO(response['Body'].get_raw_stream().read())
+
+        # 获取文件的MIME类型和文件名
+        content_type = response['Content-Type']
+        file_name = file_key.split('/')[-1]  # 获取文件名
+
+        # 返回所有响应头和文件内容
+        return file_stream, content_type, file_name, response
+
+    except CosServiceError as e:
+        raise CosServiceError(f"Error occurred when downloading file: {e}")
 
 
 def send_sms(phone_number, template_id, params):

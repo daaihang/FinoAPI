@@ -11,8 +11,8 @@ bp = Blueprint('sms', __name__)
 @jwt_required()
 def send_code():
     phone_number = request.json.get('phone_number')
-    user_id = g.current_user
-    if not phone_number or not user_id:
+    user_id = g.current_user.user_id
+    if not phone_number:
         return jsonify({'error': 'Invalid input'}), 400
 
     # 检查发送频率
@@ -35,10 +35,10 @@ def verify_code():
     当前的验证逻辑不需要路由代码，而是直接调用逻辑函数。未使用到当前函数。
     :return:
     """
-    user_id = g.current_user
+    user_id = g.current_user.user_id
     phone_number = request.json.get('phone_number')
     code = request.json.get('code')
     if verify_sms_code(user_id, phone_number, code):
-        return jsonify({'message': 'Verification successful'})
+        return jsonify({'message': 'Verification and commit successful'})
     else:
         return jsonify({'error': 'Invalid or expired code'}), 400

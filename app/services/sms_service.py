@@ -1,6 +1,6 @@
 import random
 from datetime import datetime, timedelta
-from app.models import SmsRecord
+from app.models import SmsRecord, User
 from app.services.external_service import send_sms
 from config.base import Config
 from app import db
@@ -8,7 +8,7 @@ from app import db
 
 # 发送验证码函数
 def send_verification_code(user_id, phone_number):
-    code = str(random.randint(100000, 999999))  # 生成6位数验证码
+    code = str(random.randint(1000, 9999))  # 生成6位数验证码
     valid_minutes = str(Config.SMS_VALIDITY_MINUTES)  # 从配置文件获取有效时间
     sms_type = 'verification'  # 短信类型设定为验证码
 
@@ -78,9 +78,11 @@ def verify_sms_code(user_id, phone_number, code):
 
     # 获取最新的验证码记录
     sms_record = SmsRecord.query.filter_by(
-        user_id=user_id, phone=phone_number, sms_type='verification', contact=code, status=True
+        user_id=user_id, phone=phone_number, sms_type='verification', status=True
     ).order_by(SmsRecord.created_at.desc()).first()
 
-    if sms_record and sms_record.created_at > valid_time_limit:
+    print(sms_record.contact)
+
+    if sms_record.contact == code and sms_record.created_at > valid_time_limit:
         return True
     return False

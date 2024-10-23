@@ -82,16 +82,13 @@ def update_role():
 
 
 @bp.route('/bind_phone', methods=['POST'])
-@jwt_required("admin", "monitor")
+@jwt_required()
 def bind_phone_number():
     """
     绑定手机号
-    :return:
+    :return:x
     """
-    user_id = g.current_user
+    user_id = g.current_user.user_id
     phone_number = request.json.get('phone_number')
     code = request.json.get('code')
-    if bind_phone(user_id, phone_number, code):
-        return jsonify({'message': 'Phone number bound successfully'})
-    else:
-        return jsonify({'error': 'Binding failed'}), 400
+    return bind_phone(user_id, phone_number, code)

@@ -24,7 +24,8 @@ class SmsRecord(BaseModel):
         self.status = status
 
     def __repr__(self):
-        return f'<SmsRecord UserID: {self.user_id}, Type: {self.sms_type}, Status: {"Success" if self.status else "Failure"}>'
+        return (f'<SmsRecord UserID: {self.user_id}, Type: {self.sms_type}, '
+                f'Status: {"Success" if self.status else "Failure"}>, Contact: {self.contact}')
 
     def to_dict(self):
         """将短信记录对象转化为字典，方便JSON序列化"""

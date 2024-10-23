@@ -6,10 +6,11 @@ Todo: 未来应该加上转发所有域名的操作，将常用API单独适配�
 import time
 
 import requests
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, send_file, make_response
+from qcloud_cos import CosServiceError
 
 from app.services.decorators import jwt_required  # 导入装饰器
-from app.services.external_service import handle_file_upload, send_sms
+from app.services.external_service import handle_file_upload, send_sms, get_file_from_cos
 
 from config.base import Config
 
@@ -52,6 +53,40 @@ def upload_file(file_type):
     print(user_id)
     response, status_code = handle_file_upload(file_type, file, user_id)
     return jsonify(response), status_code
+
+
+@bp.route('/file/<path:file_key>', methods=['GET'])
+# @jwt_required()
+# todo: 因为部分资源不方便带参数，暂时不用验证。需要未来强化逻辑函数权限认证。
+def download_file(file_key):
+    """
+    从腾讯云 COS 下载文件并返回，同时返回文件的元数据信息
+    :param file_key: COS 中文件的键 (文件路径)
+    :return: 文件流和元数据信息
+    """
+    if not file_key:
+        return jsonify({'error': 'file_key is required'}), 400
+
+    try:
+        # 调用函数获取 COS 文件及其所有响应信息
+        file_stream, content_type, file_name, response_headers = get_file_from_cos(file_key)
+
+        # 通过 Flask 的 send_file 返回文件，并设置相关参数
+        response = make_response(send_file(
+            file_stream,
+            mimetype=content_type,  # COS 返回的 Content-Type
+            download_name=file_name,  # 浏览器下载时显示的文件名
+        ))
+
+        # 添加所有响应头
+        for header, value in response_headers.items():
+            response.headers[header] = value
+
+        return response
+
+    except CosServiceError as e:
+        return jsonify({'error': f'File download failed: {e}'}), 500
+
 
 
 @bp.route('/send_sms', methods=['POST'])

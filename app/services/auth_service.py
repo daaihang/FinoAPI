@@ -207,16 +207,19 @@ def bind_phone(user_id, phone_number, code):
     # 查询用户是否存在
     user = User.query.get(user_id)
     if not user:
-        return jsonify({'error': 'User not found'}), 404
+        return jsonify({'error': '用户不存在/非法用户。'}), 404
+
+    if phone_number == user.phone_number:
+        return jsonify({'error': "新旧手机号不能一致。"}), 500
 
     # 如果用户已有绑定的手机号，说明是换绑操作
-    if user.phone:
-        old_phone = user.phone
-        user.phone = phone_number  # 换绑手机号
+    if user.phone_number:
+        old_phone = user.phone_number
+        user.phone_number = phone_number  # 换绑手机号
         action = f"Phone number changed from {old_phone} to {phone_number}"
     else:
         # 如果没有绑定的手机号，则是首次绑定
-        user.phone = phone_number
+        user.phone_number = phone_number
         action = f"Phone number {phone_number} successfully bound"
 
     try:
