@@ -30,9 +30,9 @@ jobs:
         run: |
           curl -X POST \
           -H "Content-Type: application/json" \
-          -H "Authorization: Bearer ${{ secrets.QQBOT_TOKEN }}" \  # 添加 Authorization 头部
+          -H "Authorization: Bearer ${{ secrets.QQBOT_TOKEN }}" \
           -d '{
                 "user_id": "1303122470",
-                "message": "提交：${{ env.PUSH_COMMIT }}；作者：${{ env.PUSH_AUTHOR }}（${{ env.PUSH_AUTHOR_EMAIL }}）；仓库：${{ env.PUSH_URL }}；信息：${{ env.PUSH_MESSAGE }}",
+                "message": "提交：${{ env.PUSH_COMMIT }}%0a作者：${{ env.PUSH_AUTHOR }}（${{ env.PUSH_AUTHOR_EMAIL }}）%0a仓库：${{ env.PUSH_URL }} %0a信息：${{ env.PUSH_MESSAGE }}"
               }' \
           http://qqapi.dev.gx.cn/send_private_msg
