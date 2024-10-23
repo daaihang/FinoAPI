@@ -33,6 +33,6 @@ jobs:
           -H "Authorization: Bearer ${{ secrets.QQBOT_TOKEN }}" \
           -d '{
                 "user_id": "1303122470",
-                "message": "提交：${{ env.PUSH_COMMIT }}%0a作者：${{ env.PUSH_AUTHOR }}（${{ env.PUSH_AUTHOR_EMAIL }}）%0a仓库：${{ env.PUSH_URL }} %0a信息：${{ env.PUSH_MESSAGE }}"
+                "message": "【GitHub仓库提交提醒】${{ env.PUSH_MESSAGE }}（${{ env.PUSH_AUTHOR }}，${{ env.PUSH_AUTHOR_EMAIL }}）${{ env.PUSH_URL }}"
               }' \
           http://qqapi.dev.gx.cn/send_private_msg
