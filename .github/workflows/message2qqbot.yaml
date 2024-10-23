@@ -1,0 +1,38 @@
+name: Send Git Push Metadata
+
+# 触发事件：每次 push 时执行
+on:
+  push:
+    branches:
+      - main  # 监听特定分支的 push 事件
+
+jobs:
+  send-metadata:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: 获取当前仓库代码
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: 获取 git push 的元数据（提交人、提交信息、提交ID等）
+      - name: Extract Git Metadata
+        id: git-metadata
+        run: |
+          echo "PUSH_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          echo "PUSH_AUTHOR=$(git log -1 --pretty=format:'%an')" >> $GITHUB_ENV
+          echo "PUSH_AUTHOR_EMAIL=$(git log -1 --pretty=format:'%ae')" >> $GITHUB_ENV
+          echo "PUSH_MESSAGE=$(git log -1 --pretty=format:'%s')" >> $GITHUB_ENV
+          echo "PUSH_URL=$(git config --get remote.origin.url)" >> $GITHUB_ENV
+
+      # Step 3: 发送 POST 请求，包含 push 的元数据
+      - name: Send Git Metadata to Website
+        run: |
+          curl -X POST \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.QQBOT_TOKEN }}" \  # 添加 Authorization 头部
+          -d '{
+                "user_id": "1303122470",
+                "message": "提交：${{ env.PUSH_COMMIT }}；作者：${{ env.PUSH_AUTHOR }}（${{ env.PUSH_AUTHOR_EMAIL }}）；仓库：${{ env.PUSH_URL }}；信息：${{ env.PUSH_MESSAGE }}",
+              }' \
+          http://qqapi.dev.gx.cn/send_private_msg
