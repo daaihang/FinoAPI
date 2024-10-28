@@ -4,7 +4,7 @@ from app.services.event_service import create_event, get_event, get_all_events, 
 from app.services.decorators import jwt_required  # 导入装饰器
 
 
-bp = Blueprint('event', __name__)
+bp = Blueprint('event_bp', __name__)
 
 
 @bp.route('/new', methods=['POST'])

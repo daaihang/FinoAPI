@@ -3,6 +3,7 @@ import os
 import time
 from io import BytesIO
 
+import requests
 from qcloud_cos import CosConfig, CosS3Client, CosServiceError
 from tencentcloud.common import credential
 from tencentcloud.common.exception import TencentCloudSDKException
@@ -10,6 +11,8 @@ from tencentcloud.common.profile.client_profile import ClientProfile
 from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.sms.v20210111 import sms_client, models
 
+from app import db
+from app.models import SensitiveData
 from config.base import Config
 
 # 初始化腾讯云 COS 客户端
@@ -121,3 +124,61 @@ def send_sms(phone_number, template_id, params):
 
     except TencentCloudSDKException as err:
         return {"error": str(err)}
+
+
+def refresh_access_token():
+    url = "https://api.weixin.qq.com/cgi-bin/stable_token"
+    payload = {
+        "grant_type": "client_credential",
+        "appid": Config.WECHAT_APP_ID,
+        "secret": Config.WECHAT_APP_SECRET,
+        "force_refresh": True
+    }
+
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        data = response.json()
+
+        access_token = data.get("access_token")
+
+        if access_token:
+            # 查找是否已存在
+            existing_data = SensitiveData.query.filter_by(key_name='access_token').first()
+
+            if existing_data:
+                # 更新已存在的记录
+                existing_data.key_value = access_token
+                existing_data.expires_in = data.get("expires_in")
+            else:
+                # 新建记录
+                existing_data = SensitiveData(key_name='access_token', key_value=access_token,
+                                              expires_in=data.get("expires_in"))
+                db.session.add(existing_data)
+
+            db.session.commit()
+            return {"success": True}
+        else:
+            return {"success": False, "error": data}  # 返回错误信息
+    except requests.exceptions.RequestException as e:
+        return {"success": False, "error": str(e)}  # 返回请求异常信息
+
+
+def get_student_list(search: str) -> dict:
+    """获取学生列表的逻辑函数"""
+    api_url = 'https://gw.wozaixiaoyuan.com/addressBook/mobile/student/studentListForCon'
+    headers = {
+        'jwsession': 'fb7816fe23fd4d20abd41fc1855f2dc4',
+        'Content-Type': 'application/json'
+    }
+    payload = {'condition': search}
+
+    try:
+        # 发送 POST 请求
+        response = requests.post(api_url, headers=headers, json=payload)
+        response.raise_for_status()  # 抛出异常以捕获错误
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Error fetching student list: {str(e)}")
+
+

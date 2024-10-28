@@ -6,7 +6,8 @@ class BaseModel(db.Model):
     __abstract__ = True  # 这是一个抽象模型类，不会创建表
 
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, nullable=True, comment='记录创建时间')
-    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=True, comment='记录更新时间')
+    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow,
+                           nullable=True, comment='记录更新时间')
 
     def save(self):
         """保存对象到数据库"""

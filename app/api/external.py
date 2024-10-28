@@ -3,18 +3,19 @@
 
 Todo: 未来应该加上转发所有域名的操作，将常用API单独适配即可。
 """
-import time
+import re
 
 import requests
 from flask import Blueprint, request, jsonify, g, send_file, make_response
 from qcloud_cos import CosServiceError
 
 from app.services.decorators import jwt_required  # 导入装饰器
-from app.services.external_service import handle_file_upload, send_sms, get_file_from_cos
+from app.services.external_service import handle_file_upload, send_sms, get_file_from_cos, refresh_access_token, \
+    get_student_list
 
 from config.base import Config
 
-bp = Blueprint('external', __name__)
+bp = Blueprint('external_bp', __name__)
 
 
 @bp.route('/photos/random', methods=['GET'])
@@ -102,3 +103,55 @@ def api_send_sms():
 
     result = send_sms(phone_number, template_id, params)
     return jsonify(result)
+
+
+@bp.route('/refresh_access_token', methods=['POST'])
+@jwt_required("admin")
+def refresh_access_token_route():
+    """
+    外部请求，强制刷新 access_token
+    :return:
+    """
+    # appid = request.json.get('appid')
+    # secret = request.json.get('secret')
+    #
+    # if not appid or not secret:
+    #     return jsonify({"success": False, "message": "Missing appid or secret"}), 400
+
+    result = refresh_access_token()
+
+    if result["success"]:
+        return jsonify({"success": True})
+    else:
+        # 返回错误信息
+        return jsonify({
+            "success": False,
+            "errcode": result["error"].get('errcode'),
+            "errmsg": result["error"].get('errmsg')
+        }), 400
+
+
+@bp.route('/student_list', methods=['GET'])
+def student_list_route():
+    """API 路由：获取学生列表。输入字段需要"""
+    search = request.args.get('search')
+    if not search:
+        return jsonify({"error": "缺少字段"}), 400
+
+    # 检查输入是否为数字字符串且至少4位
+    if search.isdigit():
+        if len(search) < 4:
+            return jsonify({"error": "数字字符串需要至少4位"}), 400
+    # 检查输入是否为汉字字符串且至少2个汉字
+    elif re.fullmatch(r'[\u4e00-\u9fa5]+', search):  # 检查是否全部为汉字
+        if len(search) < 2:
+            return jsonify({"error": "汉字字符串需要至少2个汉字"}), 400
+    else:
+        return jsonify({"error": "字段必须是数字字符串或汉字字符串"}), 400
+
+    try:
+        # 调用逻辑函数获取学生列表
+        student_list = get_student_list(search)
+        return jsonify(student_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

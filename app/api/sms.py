@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify, g
 from app.services.sms_service import send_verification_code, validate_frequent_send, verify_sms_code
 from app.services.decorators import jwt_required  # 导入装饰器
 
-bp = Blueprint('sms', __name__)
+bp = Blueprint('sms_bp', __name__)
 
 
 # 发送验证码

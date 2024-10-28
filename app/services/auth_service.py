@@ -1,14 +1,20 @@
 import datetime
+import io
 import os
+import time
 
 import jwt
 import requests
 import json
-from flask import jsonify, g
+from flask import jsonify, g, current_app
 from app.models import User
 from app import db
 from app.services.sms_service import verify_sms_code
 from config.base import Config  # 导入配置类
+import qrcode
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+import base64
 
 # 从环境变量获取 AppID 和 AppSecret
 WECHAT_APP_ID = Config.WECHAT_APP_ID
@@ -229,3 +235,70 @@ def bind_phone(user_id, phone_number, code):
     except Exception as e:
         db.session.rollback()  # 出现异常时回滚数据库
         return jsonify({'error': str(e)}), 500
+
+
+def get_padded_secret_key(secret_key: str) -> bytes:
+    """确保密钥长度符合 16、24 或 32 字节的要求"""
+    key_bytes = secret_key.encode('utf-8')
+    if len(key_bytes) > 32:
+        return key_bytes[:32]
+    return (key_bytes * (32 // len(key_bytes) + 1))[:32]  # 填充至 32 字节
+
+
+def encrypt_user_info(user_id: str, secret_key: bytes) -> str:
+    """使用 AES 加密用户 ID 和时间戳"""
+    cipher = AES.new(secret_key, AES.MODE_CBC)
+    iv = cipher.iv  # 初始化向量
+    timestamp = str(int(time.time()))  # 当前时间戳，秒级
+    data_to_encrypt = f"{timestamp}:{user_id}"  # 拼接时间戳和用户 ID
+    encrypted_data = cipher.encrypt(pad(data_to_encrypt.encode(), AES.block_size))
+    # 返回 Base64 编码后的 iv 和密文
+    return base64.b64encode(iv + encrypted_data).decode()
+
+
+def decrypt_qr_code_data(encrypted_data: str) -> dict:
+    """解密二维码数据并返回时间戳和用户 ID"""
+    encrypted_data_bytes = base64.b64decode(encrypted_data)
+    iv = encrypted_data_bytes[:16]  # 提取 IV
+    secret_key = get_padded_secret_key(current_app.config['SECRET_KEY'])
+    cipher = AES.new(secret_key, AES.MODE_CBC, iv)
+    decrypted_padded_data = cipher.decrypt(encrypted_data_bytes[16:])
+    decrypted_data = unpad(decrypted_padded_data, AES.block_size).decode()
+
+    # 拆分时间戳和用户 ID
+    timestamp, user_id = decrypted_data.split(":", 1)
+    formatted_timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(timestamp)))
+
+    return {"encrypt_time": formatted_timestamp, "user_id": user_id}
+
+
+def generate_user_qr_code(user_id: str):
+    """逻辑函数：生成加密后的用户身份二维码图像"""
+    # 获取并处理 Flask 配置中的密钥
+    secret_key = get_padded_secret_key(current_app.config['SECRET_KEY'])
+
+    # 确保密钥长度为 16/24/32 字节，以适应 AES 要求
+    if len(secret_key) not in (16, 24, 32):
+        raise ValueError("SECRET_KEY must be 16, 24, or 32 bytes long")
+
+    # 使用 AES 加密用户 ID
+    encrypted_user_id = encrypt_user_info(user_id, secret_key)
+
+    # 创建二维码对象，将加密后的数据设置为二维码内容
+    qr = qrcode.QRCode(
+        version=1,  # 设置二维码大小
+        error_correction=qrcode.constants.ERROR_CORRECT_L,  # 最低冗余量
+        box_size=10,  # 控制二维码中单个格子的大小
+        border=0,     # 无边距
+    )
+    qr.add_data(encrypted_user_id)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill='black', back_color='white')
+    img_byte_array = io.BytesIO()
+    img.save(img_byte_array, format='PNG')
+    img_byte_array.seek(0)
+
+    # 将二维码图像数据转换为 Base64
+    img_base64 = base64.b64encode(img_byte_array.getvalue()).decode('utf-8')
+    return img_base64

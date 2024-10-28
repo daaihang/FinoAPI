@@ -1,13 +1,14 @@
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, send_file
 import jwt
 
 from app.services.auth_service import (wechat_login, get_all_users, get_user_info, update_user_role,
-                                       get_user_self_info, bind_phone)
+                                       get_user_self_info, bind_phone, generate_user_qr_code, get_padded_secret_key,
+                                       decrypt_qr_code_data)
 from app.services.decorators import jwt_required  # 导入装饰器
 
 from config.base import Config
 
-bp = Blueprint('auth', __name__)
+bp = Blueprint('auth_bp', __name__)
 
 
 @bp.route('/login', methods=['POST'])
@@ -86,9 +87,40 @@ def update_role():
 def bind_phone_number():
     """
     绑定手机号
-    :return:x
+    :return:
     """
     user_id = g.current_user.user_id
     phone_number = request.json.get('phone_number')
     code = request.json.get('code')
     return bind_phone(user_id, phone_number, code)
+
+
+@bp.route('/qr_code', methods=['GET'])
+@jwt_required()
+def generate_qr_code_route():
+    """路由函数：生成并返回用户身份二维码"""
+    # 获取用户身份信息（假设通过请求头传递，或其他方式）
+    # user_id = request.args.get('user_id')
+    user_id = g.current_user.user_id
+    if not user_id:
+        return jsonify({"error": "Missing user ID"}), 400
+
+    # 调用逻辑函数生成二维码
+    img_base64 = generate_user_qr_code(user_id)
+
+    # 返回 Base64 编码的二维码数据
+    return jsonify({"qr_code": img_base64}), 200
+
+
+@bp.route('/decrypt_qr_code', methods=['POST'])
+def decrypt_qr_code_route():
+    """解密二维码数据并返回时间戳和用户 ID"""
+    encrypted_data = request.json.get('encrypted_data')
+    if not encrypted_data:
+        return jsonify({"error": "Missing encrypted data"}), 400
+
+    try:
+        decrypted_data = decrypt_qr_code_data(encrypted_data)
+        return jsonify(decrypted_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400

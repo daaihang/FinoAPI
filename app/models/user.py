@@ -2,6 +2,7 @@
 from app import db
 
 import uuid
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.models.base import BaseModel
 
@@ -40,6 +41,12 @@ class User(BaseModel):
             'jwt_revoked': self.jwt_revoked,
             'avatar': self.avatar,
         }
+
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password, password)
 
 
 class Points(BaseModel):

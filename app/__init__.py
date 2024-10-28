@@ -1,14 +1,18 @@
 import os
-
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate  # 数据库迁移工具
+from flask_migrate import Migrate
+from flask_apscheduler import APScheduler as _BaseAPScheduler
 
-from app.api import register_routes
+db = SQLAlchemy()  # 数据库实例
+migrate = Migrate()  # 迁移工具实例
 
 
-db = SQLAlchemy()
-migrate = Migrate()
+class APScheduler(_BaseAPScheduler):
+    def run_job(self, id, jobstore=None):
+        with self.app.app_context():  # 引入 Flask 上下文
+            super().run_job(id=id, jobstore=jobstore)
+
 
 def create_app():
     app = Flask(__name__)
@@ -20,18 +24,29 @@ def create_app():
     else:
         app.config.from_object('config.development.DevelopmentConfig')
 
-    # 初始化数据库
+    # 初始化数据库和迁移工具
     db.init_app(app)
     migrate.init_app(app, db)
 
     # 导入所有模型
     with app.app_context():
-        # 导入模型模块
-        from app.models import user, events, base, sms
-        # 可以在这里导入其他模型模块，有新模型需要及时在此加上
-        # from app.models import other_model
+        from app.models import user, events, base, sms, sensitive_data
+
+        # 初始化调度器
+        # scheduler = APScheduler()
+        # scheduler.init_app(app)
+        #
+        # # 导入并添加定时任务
+        # from app.services.scheduled import add_jobs
+        # add_jobs(scheduler)  # 添加定时任务
+        # scheduler.start()
+
+    # 初始化 Flask-Admin
+    from app.admin import init_admin
+    init_admin(app)
 
     # 注册所有的 API 路由
+    from app.api import register_routes
     register_routes(app)
 
     return app

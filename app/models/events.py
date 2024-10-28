@@ -18,8 +18,9 @@ class Event(BaseModel):
     max_participants = db.Column(db.Integer, nullable=False, comment='最大报名人数')
     organizers = db.Column(db.Text, nullable=True, comment='活动主办单位')
     co_organizers = db.Column(db.Text, nullable=True, comment='活动承办单位')
-    location = db.Column(db.String(255), nullable=True, comment='活动地点')
-    details = db.Column(db.Text, nullable=True, comment='活动详情（Markdown 格式）')
+    location = db.Column(db.String(255), nullable=True, comment='活动名称')
+    address = db.Column(db.String(255), nullable=True, comment='活动地点（省市区门牌号的详细描述）')
+    details = db.Column(db.Text, nullable=True, comment='活动详情（Markdown 文件的地址）')
     image = db.Column(db.Text, nullable=True, comment='活动图片海报（URL）')
     registration_review_required = db.Column(db.Boolean, nullable=False, default=False, comment='报名是否需要审核')
     registration_required = db.Column(db.Boolean, nullable=False, default=True, comment='活动是否需要报名')
@@ -34,7 +35,7 @@ class Event(BaseModel):
     contacts = db.relationship('Contact', backref='event', cascade='all, delete-orphan')
 
     def __init__(self, name, create_user, start_time, end_time, registration_start_time, registration_end_time, max_participants,
-                 organizers, co_organizers, location, details, image, registration_review_required,
+                 organizers, co_organizers, location, address, details, image, registration_review_required,
                  registration_required, is_public, is_delete, tags, type):
         self.name = name
         self.create_user = create_user
@@ -46,6 +47,7 @@ class Event(BaseModel):
         self.organizers = organizers
         self.co_organizers = co_organizers
         self.location = location
+        self.address = address
         self.details = details
         self.image = image
         self.registration_review_required = registration_review_required
@@ -84,6 +86,7 @@ class Event(BaseModel):
             'organizers': self.organizers,
             'co_organizers': self.co_organizers,
             'location': self.location,
+            'address': self.address,
             'details': self.details,
             'image': self.image,
             'registration_review_required': self.registration_review_required,
@@ -95,7 +98,7 @@ class Event(BaseModel):
         }
 
 
-# Contact会被Event引用，因此不用单独导入，会跟着Event导入
+# Contact 会被 Event 引用，因此不用单独导入，会跟着 Event 导入(?存疑)
 class Contact(BaseModel):
     __tablename__ = 'contacts'
 
